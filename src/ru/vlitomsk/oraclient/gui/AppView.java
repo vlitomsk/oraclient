@@ -1,15 +1,17 @@
 package ru.vlitomsk.oraclient.gui;
 
 import ru.vlitomsk.oraclient.ctl.AppCtl;
-import ru.vlitomsk.oraclient.gui.components.JScrolledList;
+import ru.vlitomsk.oraclient.model.ActiveTableUpdate;
+import ru.vlitomsk.oraclient.model.ConnectedUpdate;
 import ru.vlitomsk.oraclient.model.DisconnUpdate;
-import ru.vlitomsk.oraclient.model.NewConnUpdate;
+import ru.vlitomsk.oraclient.model.TableNamesUpdate;
 
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import java.util.*;
+import java.util.function.*;
 
 import static ru.vlitomsk.oraclient.gui.Strings.*;
 /**
@@ -20,15 +22,28 @@ public class AppView extends JFrame implements Observer{
             SACT_EXIT = "Exit",
             SACT_ABOUT = "About",
             SACT_CONNECT = "Connect",
-            SACT_DISCONNECT = "Disconnect";
+            SACT_DISCONNECT = "Disconnect",
+            SACT_SQLQUERY = "SQL query",
+            SACT_WRITE = "Write changes",
+            SACT_RMROW = "Remove row";
+
+    private static final String
+        IC_EXIT = "exit.png",
+        IC_ABOUT = "about.png",
+        IC_CONNECT = "connect.png",
+        IC_DISCONNECT = "disconnect.png",
+        IC_SQLQUERY = "query.png",
+        IC_WRITECHANGES = "write.png",
+        IC_RMROW = "rmrow.png";
 
     private static final String
             MENU_CONN = "Connection",
+            MENU_SQL = "SQL",
             MENU_HELP = "Help";
 
     private static final String aboutString =
-            "This is Oracle DB client \n" +
-                    "by Vasiliy Litvinov <kvas.omsk at gmail.com>";
+            "Оракуль БД климент \n" +
+                    "от Василия Литвинова <kvas.omsk at gmail.com>";
 
     private AppCtl controller;
 
@@ -68,35 +83,48 @@ public class AppView extends JFrame implements Observer{
         JOptionPane.showMessageDialog(this, err, "Error", JOptionPane.ERROR_MESSAGE);
     }
 
-    private ActionListener killListener = (e) -> dispose();
-    private ActionListener connectListener =  (e) -> SwingUtilities.invokeLater(()->{
-        LoginDialog dlg = new LoginDialog(AppView.this);
-        if (dlg.isOkay()) {
-            try {
-                controller.newConnection(dlg.getServer(), dlg.getLogin(), dlg.getPass(), dlg.getListener());
-            } catch (Exception ex) {
-                showError(ex.toString());
-                ex.printStackTrace();
-            }
-        }
-    });
-    private ActionListener disconnectListener = (e) -> SwingUtilities.invokeLater(() -> {
+    private void tcatch(ExRunnable r) {
         try {
-            controller.disconnect();
+            r.run();
         } catch (Exception ex) {
             showError(ex.toString());
             ex.printStackTrace();
         }
-    });
+    }
+
+    private ActionListener killListener = (e) -> dispose();
+    private ActionListener connectListener =  (e) -> SwingUtilities.invokeLater(()-> tcatch(() -> {
+        ConnectDialog dlg = new ConnectDialog(AppView.this);
+        if (dlg.isOkay()) {
+            controller.newConnection(dlg.getServer(), dlg.getLogin(), dlg.getPass(), dlg.getListener());
+        }
+    }));
+
+    private ActionListener disconnectListener = (e) -> SwingUtilities.invokeLater(() -> tcatch(() -> {
+        controller.disconnect();
+    }));
+
     private ActionListener aboutLitener = (e) ->
             JOptionPane.showMessageDialog(AppView.this, aboutString);
+    private String lastSql = "";
+    private ActionListener sqlQueryListener = (e) -> SwingUtilities.invokeLater(() -> tcatch(() -> {
+        SQLQueryDialog dlg = new SQLQueryDialog(AppView.this, lastSql);
+        if (dlg.isOkay()) {
+            controller.sqlQuery(lastSql = dlg.getQuery());
+        }
+    }));
+    private ActionListener writeChangesListener = (e) -> {};
+    private ActionListener rmRowListener = (e) -> {};
 
     private final Map<String, ItemDesc> mItems = new HashMap<String,ItemDesc>() {
         {
-            put(SACT_EXIT, new ItemDesc(SACT_EXIT, null, killListener));
-            put(SACT_CONNECT, new ItemDesc(SACT_CONNECT, null, connectListener));
-            put(SACT_DISCONNECT, new ItemDesc(SACT_DISCONNECT, null, disconnectListener));
-            put(SACT_ABOUT, new ItemDesc(SACT_ABOUT, null, aboutLitener));
+            put(SACT_EXIT, new ItemDesc(SACT_EXIT, IC_EXIT, killListener));
+            put(SACT_CONNECT, new ItemDesc(SACT_CONNECT, IC_CONNECT, connectListener));
+            put(SACT_DISCONNECT, new ItemDesc(SACT_DISCONNECT, IC_DISCONNECT, disconnectListener));
+            put(SACT_ABOUT, new ItemDesc(SACT_ABOUT, IC_ABOUT, aboutLitener));
+            put(SACT_SQLQUERY, new ItemDesc(SACT_SQLQUERY, IC_SQLQUERY, sqlQueryListener));
+            put(SACT_WRITE, new ItemDesc(SACT_WRITE, IC_WRITECHANGES, writeChangesListener));
+            put(SACT_RMROW, new ItemDesc(SACT_RMROW, IC_RMROW, rmRowListener));
         }
     };
 
@@ -125,9 +153,18 @@ public class AppView extends JFrame implements Observer{
     private JMenu createConnMenu() {
         JMenu connMenu = new JMenu(MENU_CONN);
         addMenuItem(connMenu, SACT_CONNECT);
+        addMenuItem(connMenu, SACT_DISCONNECT);
         connMenu.addSeparator();
         addMenuItem(connMenu, SACT_EXIT);
         return connMenu;
+    }
+
+    private JMenu createSQLMenu() {
+        JMenu sqlMenu = new JMenu(MENU_SQL);
+        addMenuItem(sqlMenu, SACT_SQLQUERY);
+        addMenuItem(sqlMenu, SACT_RMROW);
+        addMenuItem(sqlMenu, SACT_WRITE);
+        return sqlMenu;
     }
 
     private JMenu createHelpMenu() {
@@ -139,6 +176,7 @@ public class AppView extends JFrame implements Observer{
     private void addMenu() {
         JMenuBar menu = new JMenuBar();
         menu.add(createConnMenu());
+        menu.add(createSQLMenu());
         menu.add(createHelpMenu());
         setJMenuBar(menu);
     }
@@ -149,6 +187,11 @@ public class AppView extends JFrame implements Observer{
 
         addToolbarBtn(toolbar, SACT_CONNECT);
         addToolbarBtn(toolbar, SACT_DISCONNECT);
+        addToolbarBtn(toolbar, SACT_SQLQUERY);
+        toolbar.addSeparator();
+        addToolbarBtn(toolbar, SACT_WRITE);
+        toolbar.addSeparator();
+        addToolbarBtn(toolbar, SACT_RMROW);
         toolbar.addSeparator();
         addToolbarBtn(toolbar, SACT_EXIT);
         add(toolbar, BorderLayout.NORTH);
@@ -156,6 +199,7 @@ public class AppView extends JFrame implements Observer{
 
     private JPanel statusPanel;
     private JLabel statusLabel;
+    private JLabel activeTableLabel;
 
     private void addStatusbar() {
         // create the status bar panel and shove it down the bottom of the frame
@@ -165,16 +209,33 @@ public class AppView extends JFrame implements Observer{
         statusPanel.setPreferredSize(new Dimension(getWidth(), 16));
         statusPanel.setLayout(new BoxLayout(statusPanel, BoxLayout.X_AXIS));
         statusLabel = new JLabel("Disconnected");
-        statusLabel.setHorizontalAlignment(SwingConstants.LEFT);
+        statusLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        activeTableLabel = new JLabel("");
+        activeTableLabel.setForeground(Color.RED);
+        statusPanel.add(new JLabel("Active table: "));
+        statusPanel.add(activeTableLabel);
+        statusPanel.add(new JLabel(" ; Status: "));
         statusPanel.add(statusLabel);
+        statusLabel.setForeground(Color.RED);
     }
 
     private JSplitPane splitPane;
+    private TablesListView tablesListView;
+    private ActiveTableView activeTableView;
+
+    public TablesListView getTablesListView() {
+        return tablesListView;
+    }
+
+    public ActiveTableView getActiveTableView() {
+        return activeTableView;
+    }
+
     private void addSplitView() {
-        TablesListView tablesListView = new TablesListView();
-        JPanel right = new JPanel();
+        tablesListView = new TablesListView(controller.getActiveTableCtl());
+        activeTableView = new ActiveTableView(controller.getActiveTableCtl());
         SwingUtil.setAllSize(tablesListView, new Dimension(100, 500));
-        splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, tablesListView, right);
+        splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, tablesListView, activeTableView);
         splitPane.setOneTouchExpandable(false);
         splitPane.setDividerLocation(200);
 
@@ -183,13 +244,20 @@ public class AppView extends JFrame implements Observer{
 
     @Override
     public void update(Observable o, Object arg) {
-        if (arg instanceof NewConnUpdate) {
-            NewConnUpdate upd = (NewConnUpdate) arg;
+        if (arg instanceof ConnectedUpdate) {
             statusLabel.setText("Connected");
+            statusLabel.setForeground(Color.green);
         }
+
         if (arg instanceof DisconnUpdate) {
             DisconnUpdate upd = (DisconnUpdate) arg;
             statusLabel.setText("Disconnected");
+            statusLabel.setForeground(Color.red);
+        }
+
+        if (arg instanceof ActiveTableUpdate) {
+            ActiveTableUpdate upd = (ActiveTableUpdate) arg;
+            activeTableLabel.setText(upd.getTitle());
         }
     }
 }

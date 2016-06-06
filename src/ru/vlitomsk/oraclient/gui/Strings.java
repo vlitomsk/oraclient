@@ -10,7 +10,9 @@ public class Strings {
         CONN_LOGIN = "login: ",
         CONN_PASS = "pass: ",
         CONN_LISTENER = "listener: ",
-        LOGIN_DLGTITLE = "Connection",
+        CONN_DLG_TITLE = "Connection",
+        QUERY_DLG_TITLE = "SQL query",
+        QUERY_DLG_INPUT = "SQL: ",
         DLG_OK = "OK",
         DLG_CANCEL = "Cancel";
 }

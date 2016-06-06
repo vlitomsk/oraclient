@@ -10,12 +10,12 @@ import static ru.vlitomsk.oraclient.gui.Strings.*;
 /**
  * Created by vas on 03.06.2016.
  */
-public class LoginDialog extends JDialog {
+public class ConnectDialog extends JDialog {
     private JLabEdit edLogin, edPass, edListener, edServer;
     private boolean okay = false;
-    public LoginDialog(Frame owner) {
+    public ConnectDialog(Frame owner) {
         super(owner, true);
-        setTitle(LOGIN_DLGTITLE);
+        setTitle(CONN_DLG_TITLE);
         setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
         add(edServer = new JLabEdit(CONN_SERV, "127.0.0.1"));
         add(edLogin = new JLabEdit(CONN_LOGIN, "vas"));

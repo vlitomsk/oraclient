@@ -12,6 +12,10 @@ public class Main {
         AppModel model = new AppModel();
         AppCtl appController = new AppCtl(model);
         AppView appView = new AppView(appController);
+        model.getActiveTableModel().addObserver(appView.getActiveTableView());
+        model.getActiveTableModel().addObserver(appView.getTablesListView());
+        model.getActiveTableModel().addObserver(appView);
+        model.addObserver(appView.getTablesListView());
         model.addObserver(appView);
         SwingUtilities.invokeLater(() -> appView.setVisible(true));
     }
