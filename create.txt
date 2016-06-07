@@ -1,0 +1,124 @@
+drop table customer;
+drop table sales_order;
+drop table item;
+drop table product;
+drop table price;
+drop table employee;
+drop table department;
+drop table job;
+drop table location;
+
+create table customer (
+  customer_id number(6),
+  name varchar(45),
+  address varchar(40),
+  city varchar(30),
+  state varchar(2),
+  zip_code varchar(9),
+  area_code number(3),
+  phone_number number(7),
+  salesperson_id number(4),
+  credit_limit number(9,2),
+  comments long
+);
+
+
+create table sales_order (
+  order_id number(4),
+  customer_id number(6),
+  order_date date,
+  ship_date date,
+  total number(8,2)
+);
+
+create table item (
+  order_id number(4),
+  item_id number(4),
+  product_id number(6),
+  actual_price number(8,2),
+  quantity number(8),
+  total number(8,2)
+);
+
+create table product (
+  product_id number(6),
+  description varchar(30)
+);
+
+create table price (
+  product_id number(6),
+  start_date date,
+  end_date date,
+  list_price number(8,2),
+  min_price number(8,2)
+);
+
+create table employee (
+  employee_id number(4),
+  last_name varchar(15),
+  first_name varchar(15),
+  middle_initial varchar(1),
+  job_id number(3),
+  manager_id number(4),
+  hire_date date,
+  salary number(7,2),
+  commission number(7,2),
+  department_id number(2)
+);
+
+create table department (
+  department_id number(2),
+  name varchar(14),
+  location_id number(3)
+);
+
+create table job (
+  job_id number(3),
+  function varchar(20)
+);
+
+
+create table location (
+  location_id number(3),
+  regional_group varchar(15)
+);
+
+alter table customer add primary key (customer_id);
+alter table sales_order add primary key (order_id);
+alter table item add primary key (order_id,item_id);
+alter table product add primary key (product_id);
+alter table price add primary key (product_id, start_date, end_date);
+alter table employee add primary key (employee_id);
+alter table department add primary key (department_id);
+alter table job add primary key (job_id);
+alter table location add primary key (location_id);
+
+ALTER TABLE sales_order
+ADD CONSTRAINT fk_customer_id
+   FOREIGN KEY (customer_id)
+   REFERENCES customer (customer_id);
+
+ALTER TABLE item
+ADD CONSTRAINT fk_orderid
+   FOREIGN KEY (order_id)
+   REFERENCES sales_order (order_id);
+
+ALTER TABLE item
+ADD CONSTRAINT fk_productid
+   FOREIGN KEY (product_id)
+   REFERENCES product (product_id);
+
+ALTER TABLE employee 
+ADD CONSTRAINT fk_job_id
+   FOREIGN KEY (job_id)
+   REFERENCES job (job_id);
+
+ALTER TABLE employee
+ADD CONSTRAINT fk_department_id
+   FOREIGN KEY (department_id)
+   REFERENCES department (department_id);
+
+ALTER TABLE department
+ADD CONSTRAINT fk_location_id
+   FOREIGN KEY (location_id)
+   REFERENCES location (location_id);

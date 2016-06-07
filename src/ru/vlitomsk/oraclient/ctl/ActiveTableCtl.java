@@ -22,4 +22,19 @@ public class ActiveTableCtl {
         model.setActiveQueried(query);
     }
 
+    public void toggleRemove(int[] indices) {
+        model.toggleRemove(indices);
+    }
+
+    public void writeChanges() throws SQLException {
+        model.writeChanges();
+    }
+
+    public void valueChanged(int r, int c, String valueAt) {
+        model.valueChanged(r, c, valueAt);
+    }
+
+    public void addRow() {
+        model.addRow();
+    }
 }
