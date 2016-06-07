@@ -49,13 +49,13 @@ public class ActiveTableCtl {
 
     public void addpk(String constname, String[] columns) throws SQLException {
         model.setActiveQueried("alter table " + model.getActiveTblName() + " add constraint " + constname +
-         "primary key (" + joinstr(columns,",") + ")");
+         " primary key (" + joinstr(columns,",") + ")");
         model.refresh();
     }
 
     public void addfk(String constname, String[] columns, String tbl, String[] refcolumns) throws SQLException {
         model.setActiveQueried("alter table " + model.getActiveTblName() + " add constraint " + constname +
-         "foreign key (" + joinstr(columns, ",") + ") references " + tbl + "(" + joinstr(refcolumns, ",") + ")");
+         " foreign key (" + joinstr(columns, ",") + ") references " + tbl + "(" + joinstr(refcolumns, ",") + ")");
         model.refresh();
     }
 

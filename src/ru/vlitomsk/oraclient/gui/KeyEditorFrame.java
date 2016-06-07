@@ -43,16 +43,23 @@ public class KeyEditorFrame extends JFrame implements Observer {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
         JButton addpk, addfk, rmk;
-        panel.add(addpk = new JButton("Add PK"));
-        panel.add(addfk = new JButton("Add FK"));
+        panel.add(addpk = new JButton("Add PK.."));
+        panel.add(addfk = new JButton("Add FK.."));
         panel.add(rmk = new JButton("Remove key"));
         add(panel);
-//        addpk.addActionListener(e -> {
-//            tcatch(()->ctl.addpk(lst.getSelectedValue()));
-//        });
-//        addfk.addActionListener(e -> {
-//            tcatch(()->ctl.addfk(lst.getSelectedValue()));
-//        });
+        addpk.addActionListener(e -> {
+            AddPrimKeyDialog dlg = new AddPrimKeyDialog(KeyEditorFrame.this);
+            if (dlg.isOkay()) {
+                tcatch(()->ctl.addpk(dlg.getConstraint(), dlg.getCols()));
+            }
+        });
+        addfk.addActionListener(e -> {
+            AddForeignKeyDialog dlg = new AddForeignKeyDialog(KeyEditorFrame.this);
+            if (dlg.isOkay()) {
+                tcatch(() -> ctl.addfk(dlg.getConstraint(), dlg.getCols(), dlg.getReftable(), dlg.getRefs()));
+            }
+            //tcatch(()->ctl.addfk(lst.getSelectedValue()));
+        });
         rmk.addActionListener(e -> {
             tcatch(()->ctl.dropconst(lst.getSelectedValue()));
         });
