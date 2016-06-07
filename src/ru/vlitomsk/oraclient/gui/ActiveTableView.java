@@ -1,10 +1,7 @@
 package ru.vlitomsk.oraclient.gui;
 
 import ru.vlitomsk.oraclient.ctl.ActiveTableCtl;
-import ru.vlitomsk.oraclient.model.ActiveTableUpdate;
-import ru.vlitomsk.oraclient.model.AddRowUpdate;
-import ru.vlitomsk.oraclient.model.CellChangeUpdate;
-import ru.vlitomsk.oraclient.model.ToggleRemoveUpdate;
+import ru.vlitomsk.oraclient.model.*;
 
 import javax.swing.*;
 import javax.swing.event.TableModelListener;
@@ -50,6 +47,8 @@ public class ActiveTableView extends JScrollPane implements Observer {
         private String[] colNames;
         private Color[][] cellColors;
         private List<String[]> cellvals  = new ArrayList<>();
+        private List<String> pkeys;
+        private List<FKey> fkeys;
         public ActiveJTableModel(ActiveTableUpdate upd) throws SQLException {
             ResultSet rs = upd.getRs();
             ResultSetMetaData rsmd = rs.getMetaData();
@@ -75,6 +74,8 @@ public class ActiveTableView extends JScrollPane implements Observer {
                     cellsEditable[i][j] = true;
                     cellColors[i][j] = Color.WHITE;
                 }
+            this.pkeys = upd.getPkeys();
+            this.fkeys = upd.getFkeys();
         }
 
         @Override
@@ -160,6 +161,46 @@ public class ActiveTableView extends JScrollPane implements Observer {
             setRowEditable(h-1, true);
             fireTableRowsUpdated(h-1,h-1);
         }
+
+        public boolean isPrimaryKey(int column) {
+            for (String pk : pkeys) {
+                if (colNames[column].equals(pk))
+                    return true;
+            }
+            return false;
+        }
+
+        public boolean isForeignKey(int column) {
+            for (FKey fk : fkeys) {
+                if (colNames[column].equals(fk.columnName))
+                    return true;
+            }
+            return false;
+        }
+
+        public String getForeignKeyTable(int column) {
+            for (FKey fk : fkeys) {
+                if (colNames[column].equals(fk.columnName))
+                    return fk.table;
+            }
+            return null;
+        }
+
+        public String getForeignKeyField(int column) {
+            for (FKey fk : fkeys) {
+                if (colNames[column].equals(fk.columnName))
+                    return fk.columnName;
+            }
+            return null;
+        }
+
+        public List<String> getFKValues(int column) {
+            for (FKey fk : fkeys) {
+                if (colNames[column].equals(fk.columnName))
+                    return fk.availValues;
+            }
+            return null;
+        }
     }
 
     private static final Color RM_COLOR = Color.red;
@@ -203,16 +244,14 @@ public class ActiveTableView extends JScrollPane implements Observer {
         if (rs == null) {
             return tbl=null;
         } else {
-            tbl = new JTable(new ActiveJTableModel(upd));
+            ActiveJTableModel tmdl;
+            tbl = new JTable(tmdl=new ActiveJTableModel(upd));
             tbl.setDefaultRenderer(Object.class, renderer);
             ResultSetMetaData rsmd = rs.getMetaData();
             for (int i = 0; i < tbl.getColumnCount(); ++i) {
                 int type = rsmd.getColumnType(i+1);
-                if (type == Types.BOOLEAN) {
-                    JComboBox comboBox = new JComboBox();
-                    comboBox.addItem("NULL");
-                    comboBox.addItem("TRUE");
-                    comboBox.addItem("FALSE");
+                if (tmdl.isForeignKey(i)) {
+                    JComboBox<String> comboBox = new JComboBox<>(new Vector<>(tmdl.getFKValues(i)));
                     tbl.getColumnModel().getColumn(i).setCellEditor(new DefaultCellEditor(comboBox));
                 }
             }

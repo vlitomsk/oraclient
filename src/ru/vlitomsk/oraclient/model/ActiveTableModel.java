@@ -17,6 +17,7 @@ public class ActiveTableModel extends Observable {
     private int insertCount = 0;
     private int columns = 0;
 
+
     class Change {
         int col;
         String val;
@@ -49,8 +50,11 @@ public class ActiveTableModel extends Observable {
     public void newConnection(DBConn connection) {
         this.connection = connection;
         setChanged();
-        notifyObservers(new ActiveTableUpdate(null, null, false));
+        notifyObservers(new ActiveTableUpdate(null, null, false, null, null));
     }
+
+    private List<String> pkeys = new ArrayList<>();
+    private List<FKey> fkeys = new ArrayList<>();
 
     public void setActive(String tblName) throws SQLException {
         if (connection == null)
@@ -59,9 +63,29 @@ public class ActiveTableModel extends Observable {
         if (lastRs != null)
             lastRs.close();
         lastRs = connection.sqlQuery("SELECT " + tblName + ".* FROM " + tblName);
+        ResultSet pkset = connection.getDBMetaData().getPrimaryKeys(null, null, tblName.toUpperCase());
+        pkeys.clear();
+        fkeys.clear();
+        while (pkset.next()) {
+            pkeys.add(pkset.getString("COLUMN_NAME"));
+        }
+        pkset.close();
+        ResultSet fkset = connection.getDBMetaData().getImportedKeys(null, null, tblName.toUpperCase());
+        while (fkset.next()) {
+            FKey fk;
+            fk = new FKey(fkset.getString("PKTABLE_NAME"), fkset.getString("PKCOLUMN_NAME"));
+            String query = "SELECT " + fk.columnName + " FROM " + fk.table;
+            ResultSet availfk = connection.sqlQuery(query);
+            while (availfk.next()) {
+                fk.addAvail(availfk.getString(1));
+            }
+            fkeys.add(fk);
+            availfk.close();
+        }
+        fkset.close();
         resetSet();
         setChanged();
-        notifyObservers(new ActiveTableUpdate(lastRs, tblName, true));
+        notifyObservers(new ActiveTableUpdate(lastRs, tblName, true, pkeys, fkeys));
     }
 
     public void setActiveQueried(String sqlQuery) throws SQLException {
@@ -70,17 +94,19 @@ public class ActiveTableModel extends Observable {
         if (lastRs != null)
             lastRs.close();
         lastRs = connection.sqlQuery(sqlQuery);
+        pkeys.clear();
+        fkeys.clear();
         resetSet();
         setChanged();
         notifyObservers(new TableNamesUpdate(connection.getTableNames()));
         setChanged();
-        notifyObservers(new ActiveTableUpdate(lastRs, "SQL query result", false));
+        notifyObservers(new ActiveTableUpdate(lastRs, "SQL query result", false, pkeys, fkeys));
     }
 
     public void disconnect() {
         this.connection = null;
         setChanged();
-        notifyObservers(new ActiveTableUpdate(null, null, false));
+        notifyObservers(new ActiveTableUpdate(null, null, false, null, null));
     }
 
     public void refresh() throws SQLException {
