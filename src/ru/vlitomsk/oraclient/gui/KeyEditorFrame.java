@@ -64,6 +64,7 @@ public class KeyEditorFrame extends JFrame implements Observer {
             tcatch(()->ctl.dropconst(lst.getSelectedValue()));
         });
         pack();
+        setSize(getWidth(), 300);
         setLocationRelativeTo(null);
         //setVisible(true);
     }
