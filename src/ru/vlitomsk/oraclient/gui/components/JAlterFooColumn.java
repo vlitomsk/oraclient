@@ -5,12 +5,13 @@ import javax.swing.*;
 /**
  * Created by vas on 08.06.2016.
  */
-public class JAlterAddColumn extends JAlterComp {
+public class JAlterFooColumn extends JPanel {
     private final JCreateDef cdef;
-    //private JLabEdit cname = new JLabEdit("Column name: ");
     private JLabEdit jafter = new JLabEdit("AFTER ");
     private JCheckBox chkFirst;
-    public JAlterAddColumn() {
+    private String foo;
+    public JAlterFooColumn(String foo) {
+        this.foo=foo;
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         JPanel afterwhat = new JPanel();
         afterwhat.setLayout(new BoxLayout(afterwhat, BoxLayout.X_AXIS));
@@ -21,14 +22,11 @@ public class JAlterAddColumn extends JAlterComp {
         chkFirst.addActionListener(e -> {
             jafter.setEnabled(!chkFirst.isSelected());
         });
-       // add(cname);
-       // add(afterwhat);
         add(cdef = new JCreateDef());
     }
 
     @Override
     public String toString() {
-        return " ADD " + " " + cdef.toString();
-                //+ (chkFirst.isSelected() ? " FIRST" : (" AFTER " + jafter.getText()));
+        return " " + foo + " " + cdef.toString();
     }
 }

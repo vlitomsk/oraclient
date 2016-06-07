@@ -62,6 +62,7 @@ public class OracleDBConn implements DBConn {
     public boolean sqlQuery(String query) throws SQLException {
         if (connection == null)
             return false;
+        System.out.println("Query:"+query);
         qryStatement = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
         return qryStatement.execute(query);
     }

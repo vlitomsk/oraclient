@@ -1,8 +1,8 @@
 package ru.vlitomsk.oraclient.gui;
 
 import ru.vlitomsk.oraclient.ctl.AppCtl;
-import ru.vlitomsk.oraclient.gui.components.JAlterAddColumn;
-import ru.vlitomsk.oraclient.gui.components.JSQLType;
+import ru.vlitomsk.oraclient.gui.components.JAlterDropColumn;
+import ru.vlitomsk.oraclient.gui.components.JAlterFooColumn;
 import ru.vlitomsk.oraclient.model.ActiveTableUpdate;
 import ru.vlitomsk.oraclient.model.ConnectedUpdate;
 import ru.vlitomsk.oraclient.model.DisconnUpdate;
@@ -30,7 +30,8 @@ public class AppView extends JFrame implements Observer{
             SACT_SETNULL = "Set to NULL",
             SACT_KEYEDIT = "Edit keys",
             SACT_ADDCOL = "Add column",
-            SACT_RMCOL = "Remove column";
+            SACT_RMCOL = "Remove column",
+            SACT_MODCOL = "Modify column";
 
     private static final String
         IC_EXIT = "exit.png",
@@ -44,7 +45,8 @@ public class AppView extends JFrame implements Observer{
         IC_SETNULL = "mknull.png",
         IC_KEYEDIT = "keyedit.png",
         IC_ADDCOL = "addcol.png",
-        IC_RMCOL = "rmcol.png";
+        IC_RMCOL = "rmcol.png",
+        IC_MODCOL = "modcol.png";
 
     private static final String
             MENU_CONN = "Connection",
@@ -125,13 +127,22 @@ public class AppView extends JFrame implements Observer{
     }));
     private ActionListener writeChangesListener = (e) -> {};
     private ActionListener addColListener = (e) -> {
-        AlterDialog dlg = new AlterDialog(AppView.this, JAlterAddColumn.class, SACT_ADDCOL);
+        AlterDialog dlg = new AlterDialog(AppView.this, new JAlterFooColumn("ADD"), SACT_ADDCOL);
+        if (dlg.isOkay()) {
+            tcatch(()->controller.getActiveTableCtl().alterTable(dlg.toString()));
+        }
+    };
+    private ActionListener modColListener = (e) -> {
+        AlterDialog dlg = new AlterDialog(AppView.this, new JAlterFooColumn("MODIFY"), SACT_MODCOL);
         if (dlg.isOkay()) {
             tcatch(()->controller.getActiveTableCtl().alterTable(dlg.toString()));
         }
     };
     private ActionListener rmColListener = (e) -> {
-      //return
+        AlterDialog dlg = new AlterDialog(AppView.this, new JAlterDropColumn(), SACT_RMCOL);
+        if (dlg.isOkay()) {
+            tcatch(()->controller.getActiveTableCtl().alterTable(dlg.toString()));
+        }
     };
 
     private final Map<String, ItemDesc> mItems = new HashMap<String,ItemDesc>() {
@@ -148,6 +159,7 @@ public class AppView extends JFrame implements Observer{
             put(SACT_KEYEDIT, new ItemDesc(SACT_KEYEDIT, IC_KEYEDIT, null));
             put(SACT_ADDCOL, new ItemDesc(SACT_ADDCOL, IC_ADDCOL, addColListener));
             put(SACT_RMCOL, new ItemDesc(SACT_RMCOL, IC_RMCOL, rmColListener));
+            put(SACT_MODCOL, new ItemDesc(SACT_MODCOL, IC_MODCOL, modColListener));
         }
     };
     private final Map<String, JButton> mButtons = new HashMap<String, JButton>();
@@ -225,6 +237,7 @@ public class AppView extends JFrame implements Observer{
         addToolbarBtn(toolbar, SACT_KEYEDIT);
         addToolbarBtn(toolbar, SACT_RMCOL);
         addToolbarBtn(toolbar, SACT_ADDCOL);
+        addToolbarBtn(toolbar, SACT_MODCOL);
         toolbar.addSeparator();
         addToolbarBtn(toolbar, SACT_EXIT);
         add(toolbar, BorderLayout.NORTH);
