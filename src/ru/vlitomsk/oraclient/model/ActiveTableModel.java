@@ -16,6 +16,9 @@ public class ActiveTableModel extends Observable {
     private int insertCount = 0;
     private int columns = 0;
 
+    public String getActiveTblName() {
+        return activeTblName;
+    }
 
     class Change {
         int col;
@@ -54,27 +57,21 @@ public class ActiveTableModel extends Observable {
         notifyObservers(new ActiveTableUpdate(null, null, false, null, null));
     }
 
-    private List<String> pkeys = new ArrayList<>();
+    private List<PKey> pkeys = new ArrayList<>();
     private List<FKey> fkeys = new ArrayList<>();
 
-    public void setActive(String tblName) throws SQLException {
-        if (connection == null)
-            return;
-        activeTblName = tblName;
-        if (lastRs != null)
-            lastRs.close();
-        lastRs = connection.sqlSelectQuery("SELECT " + tblName + ".* FROM " + tblName);
-        ResultSet pkset = connection.getDBMetaData().getPrimaryKeys(null, null, tblName.toUpperCase());
+    private void reloadKeys() throws  SQLException {
+        ResultSet pkset = connection.getDBMetaData().getPrimaryKeys(null, null, activeTblName.toUpperCase());
         pkeys.clear();
         fkeys.clear();
         while (pkset.next()) {
-            pkeys.add(pkset.getString("COLUMN_NAME"));
+            pkeys.add(new PKey(pkset.getString("COLUMN_NAME"), pkset.getString("PK_NAME")));
         }
         pkset.close();
-        ResultSet fkset = connection.getDBMetaData().getImportedKeys(null, null, tblName.toUpperCase());
+        ResultSet fkset = connection.getDBMetaData().getImportedKeys(null, null, activeTblName.toUpperCase());
         while (fkset.next()) {
             FKey fk;
-            fk = new FKey(fkset.getString("PKTABLE_NAME"), fkset.getString("PKCOLUMN_NAME"));
+            fk = new FKey(fkset.getString("PKTABLE_NAME"), fkset.getString("PKCOLUMN_NAME"), fkset.getString("FK_NAME"));
             String query = "SELECT " + fk.columnName + " FROM " + fk.table;
             ResultSet availfk = connection.sqlSelectQuery(query);
             while (availfk.next()) {
@@ -84,6 +81,18 @@ public class ActiveTableModel extends Observable {
             availfk.close();
         }
         fkset.close();
+        setChanged();
+        notifyObservers(new KeysUpdate(pkeys, fkeys));
+    }
+
+    public void setActive(String tblName) throws SQLException {
+        if (connection == null)
+            return;
+        activeTblName = tblName;
+        if (lastRs != null)
+            lastRs.close();
+        lastRs = connection.sqlSelectQuery("SELECT " + tblName + ".* FROM " + tblName);
+        reloadKeys();
         resetSet();
         setChanged();
         notifyObservers(new ActiveTableUpdate(lastRs, tblName, true, pkeys, fkeys));

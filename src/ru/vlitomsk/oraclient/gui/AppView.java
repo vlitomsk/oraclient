@@ -25,7 +25,8 @@ public class AppView extends JFrame implements Observer{
             SACT_WRITE = "Write changes",
             SACT_RMROW = "Toggle remove row",
             SACT_ADDROW = "Add row",
-            SACT_SETNULL = "Set to NULL";
+            SACT_SETNULL = "Set to NULL",
+            SACT_KEYEDIT = "Edit keys";
 
     private static final String
         IC_EXIT = "exit.png",
@@ -36,7 +37,8 @@ public class AppView extends JFrame implements Observer{
         IC_WRITECHANGES = "write.png",
         IC_RMROW = "rmrow.png",
         IC_ADDROW = "addrow.png",
-        IC_SETNULL = "mknull.png";
+        IC_SETNULL = "mknull.png",
+        IC_KEYEDIT = "keyedit.png";
 
     private static final String
             MENU_CONN = "Connection",
@@ -53,7 +55,7 @@ public class AppView extends JFrame implements Observer{
         super();
         this.controller = controller;
 
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         Dimension minSize = new Dimension(800, 600);
         setSize(minSize);
         setMinimumSize(minSize);
@@ -129,6 +131,7 @@ public class AppView extends JFrame implements Observer{
             put(SACT_RMROW, new ItemDesc(SACT_RMROW, IC_RMROW, null));
             put(SACT_ADDROW, new ItemDesc(SACT_ADDROW, IC_ADDROW, null));
             put(SACT_SETNULL, new ItemDesc(SACT_SETNULL, IC_SETNULL, null));
+            put(SACT_KEYEDIT, new ItemDesc(SACT_KEYEDIT, IC_KEYEDIT, null));
         }
     };
     private final Map<String, JButton> mButtons = new HashMap<String, JButton>();
@@ -153,6 +156,7 @@ public class AppView extends JFrame implements Observer{
         btn.addActionListener(desc.listener);
         btn.setToolTipText(desc.title);
         tb.add(btn);
+        int похуй, нахуй;
         mButtons.put(itemName, btn);
     }
 
@@ -198,6 +202,7 @@ public class AppView extends JFrame implements Observer{
         addToolbarBtn(toolbar, SACT_SQLQUERY);
         toolbar.addSeparator();
         addToolbarBtn(toolbar, SACT_WRITE);
+        addToolbarBtn(toolbar, SACT_KEYEDIT);
         addToolbarBtn(toolbar, SACT_RMROW);
         addToolbarBtn(toolbar, SACT_ADDROW);
         addToolbarBtn(toolbar, SACT_SETNULL);
@@ -247,6 +252,7 @@ public class AppView extends JFrame implements Observer{
         mButtons.get(SACT_ADDROW).addActionListener(activeTableView.getAddRowListener());
         mButtons.get(SACT_WRITE).addActionListener(activeTableView.getWriteChangesListener());
         mButtons.get(SACT_SETNULL).addActionListener(activeTableView.getSetNullListener());
+        mButtons.get(SACT_KEYEDIT).addActionListener(activeTableView.getKeyEditListener());
         SwingUtil.setAllSize(tablesListView, new Dimension(100, 500));
         splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, tablesListView, activeTableView);
         splitPane.setOneTouchExpandable(false);

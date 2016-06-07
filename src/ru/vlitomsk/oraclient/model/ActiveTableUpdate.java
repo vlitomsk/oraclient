@@ -11,10 +11,10 @@ public class ActiveTableUpdate {
     private ResultSet rs;
     private String title;
     private boolean editable;
-    private List<String> pkeys ;
+    private List<PKey> pkeys ;
     private List<FKey> fkeys ;
 
-    public ActiveTableUpdate(ResultSet rs, String title, boolean editable, List<String> pkeys, List<FKey> fkeys) {
+    public ActiveTableUpdate(ResultSet rs, String title, boolean editable, List<PKey> pkeys, List<FKey> fkeys) {
         this.rs = rs;
         this.title = title;
         this.editable = editable;
@@ -34,7 +34,7 @@ public class ActiveTableUpdate {
         return editable;
     }
 
-    public List<String> getPkeys() {
+    public List<PKey> getPkeys() {
         return pkeys;
     }
 

@@ -37,4 +37,30 @@ public class ActiveTableCtl {
     public void addRow() {
         model.addRow();
     }
+
+    private String joinstr(String[] arr, String sep) {
+        String res = "";
+        for (int i = 0; i < arr.length - 1; ++i)
+            res += arr[i] + sep;
+        if (arr.length != 0)
+            res += arr[arr.length - 1];
+        return res;
+    }
+
+    public void addpk(String constname, String[] columns) throws SQLException {
+        model.setActiveQueried("alter table " + model.getActiveTblName() + " add constraint " + constname +
+         "primary key (" + joinstr(columns,",") + ")");
+        model.refresh();
+    }
+
+    public void addfk(String constname, String[] columns, String tbl, String[] refcolumns) throws SQLException {
+        model.setActiveQueried("alter table " + model.getActiveTblName() + " add constraint " + constname +
+         "foreign key (" + joinstr(columns, ",") + ") references " + tbl + "(" + joinstr(refcolumns, ",") + ")");
+        model.refresh();
+    }
+
+    public void dropconst(String constName) throws SQLException {
+        model.setActiveQueried("alter table " + model.getActiveTblName() + " drop constraint " + constName);
+        model.refresh();
+    }
 }

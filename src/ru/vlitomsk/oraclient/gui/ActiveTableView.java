@@ -6,7 +6,6 @@ import ru.vlitomsk.oraclient.model.*;
 import javax.swing.*;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.*;
-import java.sql.Types;
 import java.util.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
@@ -24,6 +23,8 @@ public class ActiveTableView extends JScrollPane implements Observer {
     public ActiveTableView(ActiveTableCtl ctl) {
         super();
         this.ctl = ctl;
+        keyedit = new KeyEditorFrame(ctl, new ArrayList<>());
+        keyedit.setVisible(false);
         setHorizontalScrollBarPolicy(HORIZONTAL_SCROLLBAR_AS_NEEDED);
         setVerticalScrollBarPolicy(VERTICAL_SCROLLBAR_AS_NEEDED);
     }
@@ -47,7 +48,7 @@ public class ActiveTableView extends JScrollPane implements Observer {
         private String[] colNames;
         private Color[][] cellColors;
         private List<String[]> cellvals  = new ArrayList<>();
-        private List<String> pkeys;
+        private List<PKey> pkeys;
         private List<FKey> fkeys;
         public ActiveJTableModel(ActiveTableUpdate upd) throws SQLException {
             ResultSet rs = upd.getRs();
@@ -163,8 +164,8 @@ public class ActiveTableView extends JScrollPane implements Observer {
         }
 
         public boolean isPrimaryKey(int column) {
-            for (String pk : pkeys) {
-                if (colNames[column].equals(pk))
+            for (PKey pk : pkeys) {
+                if (colNames[column].equals(pk.columnName))
                     return true;
             }
             return false;
@@ -247,6 +248,7 @@ public class ActiveTableView extends JScrollPane implements Observer {
             ActiveJTableModel tmdl;
             tbl = new JTable(tmdl=new ActiveJTableModel(upd));
             tbl.setDefaultRenderer(Object.class, renderer);
+            tbl.getTableHeader().setDefaultRenderer(headerRenderer);
             ResultSetMetaData rsmd = rs.getMetaData();
             for (int i = 0; i < tbl.getColumnCount(); ++i) {
                 int type = rsmd.getColumnType(i+1);
@@ -267,6 +269,20 @@ public class ActiveTableView extends JScrollPane implements Observer {
 
         return tbl;
     }
+
+    private TableCellRenderer headerRenderer = new TableCellRenderer() {
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            //JLabel lbl = (JLabel) tcrOs.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            ActiveJTableModel mdl = ((ActiveJTableModel)tbl.getModel());
+            JLabel lbl = new JLabel(mdl.getColumnName(column));
+            lbl.setBorder(BorderFactory.createCompoundBorder(lbl.getBorder(), BorderFactory.createLineBorder(Color.black)));
+            lbl.setHorizontalAlignment(SwingConstants.LEFT);
+            lbl.setFont(new Font("Arial", mdl.isPrimaryKey(column) ? Font.BOLD : Font.PLAIN, 12));
+            lbl.setBackground(isSelected ? Color.lightGray : Color.PINK);
+            return lbl;
+        }
+    };
 
     private TableModelListener chgListener = e -> {
         int r = e.getFirstRow();
@@ -335,6 +351,10 @@ public class ActiveTableView extends JScrollPane implements Observer {
             tmdl.addRow(newrow);
             tmdl.fireTableDataChanged();
         }
+
+        if (arg instanceof  KeysUpdate) {
+            keyedit.update(o, arg);
+        }
     }
 
     public ActionListener getRmRowListener() {
@@ -372,6 +392,13 @@ public class ActiveTableView extends JScrollPane implements Observer {
                     ctl.valueChanged(row, col, null);
                 }
             }
+        };
+    }
+
+    private KeyEditorFrame keyedit ;
+    public ActionListener getKeyEditListener() {
+        return e-> {
+            keyedit.setVisible(true);
         };
     }
 }

@@ -29,6 +29,10 @@ public class JScrolledList<Tp> extends JScrollPane {
         list.setSelectedIndex(-1);
     }
 
+    public Tp getSelectedValue() {
+        return list.getSelectedValue();
+    }
+
     public void addListSelectionListener(ListSelectionListener listener) {
         list.addListSelectionListener(listener);
     }
