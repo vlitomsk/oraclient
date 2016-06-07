@@ -12,5 +12,7 @@ public interface DBConn {
     public void close() throws SQLException;
     public List<String> getTableNames() throws SQLException;
     public DatabaseMetaData getDBMetaData() throws SQLException;
-    ResultSet sqlQuery(String query) throws SQLException;
+    ResultSet sqlSelectQuery(String query) throws SQLException;
+    boolean sqlQuery(String query) throws SQLException;
+    ResultSet getResultSet() throws SQLException;
 }

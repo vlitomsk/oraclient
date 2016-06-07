@@ -50,10 +50,24 @@ public class OracleDBConn implements DBConn {
     }
 
     @Override
-    public ResultSet sqlQuery(String query) throws SQLException {
+    public ResultSet sqlSelectQuery(String query) throws SQLException {
         if (connection == null)
             return null;
         Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
         return stmt.executeQuery(query);
+    }
+
+    private Statement qryStatement ;
+    @Override
+    public boolean sqlQuery(String query) throws SQLException {
+        if (connection == null)
+            return false;
+        qryStatement = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+        return qryStatement.execute(query);
+    }
+
+    @Override
+    public ResultSet getResultSet() throws SQLException {
+        return qryStatement.getResultSet();
     }
 }

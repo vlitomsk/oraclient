@@ -1,6 +1,5 @@
 package ru.vlitomsk.oraclient.model;
 
-import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
@@ -34,8 +33,10 @@ public class ActiveTableModel extends Observable {
         rowChanges.clear();
         selectCount = 0;
         insertCount = 0;
-        lastRs.beforeFirst();
-        lastRs.moveToCurrentRow();
+//        lastRs.beforeFirst();
+   //     lastRs.moveToCurrentRow();
+        if (lastRs == null)
+            return;
         columns = lastRs.getMetaData().getColumnCount();
         while (lastRs.next()) {
             ++selectCount;
@@ -62,7 +63,7 @@ public class ActiveTableModel extends Observable {
         activeTblName = tblName;
         if (lastRs != null)
             lastRs.close();
-        lastRs = connection.sqlQuery("SELECT " + tblName + ".* FROM " + tblName);
+        lastRs = connection.sqlSelectQuery("SELECT " + tblName + ".* FROM " + tblName);
         ResultSet pkset = connection.getDBMetaData().getPrimaryKeys(null, null, tblName.toUpperCase());
         pkeys.clear();
         fkeys.clear();
@@ -75,7 +76,7 @@ public class ActiveTableModel extends Observable {
             FKey fk;
             fk = new FKey(fkset.getString("PKTABLE_NAME"), fkset.getString("PKCOLUMN_NAME"));
             String query = "SELECT " + fk.columnName + " FROM " + fk.table;
-            ResultSet availfk = connection.sqlQuery(query);
+            ResultSet availfk = connection.sqlSelectQuery(query);
             while (availfk.next()) {
                 fk.addAvail(availfk.getString(1));
             }
@@ -91,16 +92,21 @@ public class ActiveTableModel extends Observable {
     public void setActiveQueried(String sqlQuery) throws SQLException {
         if (connection == null)
             throw new SQLException("You need to connect!");
-        if (lastRs != null)
-            lastRs.close();
-        lastRs = connection.sqlQuery(sqlQuery);
+
+        boolean hasRs = connection.sqlQuery(sqlQuery);
         pkeys.clear();
         fkeys.clear();
         resetSet();
+
+        if (hasRs) {
+            if (lastRs != null)
+                lastRs.close();
+            lastRs = connection.getResultSet();
+            setChanged();
+            notifyObservers(new ActiveTableUpdate(lastRs, "SQL query result", false, pkeys, fkeys));
+        }
         setChanged();
         notifyObservers(new TableNamesUpdate(connection.getTableNames()));
-        setChanged();
-        notifyObservers(new ActiveTableUpdate(lastRs, "SQL query result", false, pkeys, fkeys));
     }
 
     public void disconnect() {
