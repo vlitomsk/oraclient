@@ -1,6 +1,8 @@
 package ru.vlitomsk.oraclient.gui;
 
 import ru.vlitomsk.oraclient.ctl.AppCtl;
+import ru.vlitomsk.oraclient.gui.components.JAlterAddColumn;
+import ru.vlitomsk.oraclient.gui.components.JSQLType;
 import ru.vlitomsk.oraclient.model.ActiveTableUpdate;
 import ru.vlitomsk.oraclient.model.ConnectedUpdate;
 import ru.vlitomsk.oraclient.model.DisconnUpdate;
@@ -26,7 +28,9 @@ public class AppView extends JFrame implements Observer{
             SACT_RMROW = "Toggle remove row",
             SACT_ADDROW = "Add row",
             SACT_SETNULL = "Set to NULL",
-            SACT_KEYEDIT = "Edit keys";
+            SACT_KEYEDIT = "Edit keys",
+            SACT_ADDCOL = "Add column",
+            SACT_RMCOL = "Remove column";
 
     private static final String
         IC_EXIT = "exit.png",
@@ -38,7 +42,9 @@ public class AppView extends JFrame implements Observer{
         IC_RMROW = "rmrow.png",
         IC_ADDROW = "addrow.png",
         IC_SETNULL = "mknull.png",
-        IC_KEYEDIT = "keyedit.png";
+        IC_KEYEDIT = "keyedit.png",
+        IC_ADDCOL = "addcol.png",
+        IC_RMCOL = "rmcol.png";
 
     private static final String
             MENU_CONN = "Connection",
@@ -118,7 +124,15 @@ public class AppView extends JFrame implements Observer{
         }
     }));
     private ActionListener writeChangesListener = (e) -> {};
-    //private ActionListener rmRowListener = (e) -> {};
+    private ActionListener addColListener = (e) -> {
+        AlterDialog dlg = new AlterDialog(AppView.this, JAlterAddColumn.class, SACT_ADDCOL);
+        if (dlg.isOkay()) {
+            tcatch(()->controller.getActiveTableCtl().alterTable(dlg.toString()));
+        }
+    };
+    private ActionListener rmColListener = (e) -> {
+      //return
+    };
 
     private final Map<String, ItemDesc> mItems = new HashMap<String,ItemDesc>() {
         {
@@ -132,6 +146,8 @@ public class AppView extends JFrame implements Observer{
             put(SACT_ADDROW, new ItemDesc(SACT_ADDROW, IC_ADDROW, null));
             put(SACT_SETNULL, new ItemDesc(SACT_SETNULL, IC_SETNULL, null));
             put(SACT_KEYEDIT, new ItemDesc(SACT_KEYEDIT, IC_KEYEDIT, null));
+            put(SACT_ADDCOL, new ItemDesc(SACT_ADDCOL, IC_ADDCOL, addColListener));
+            put(SACT_RMCOL, new ItemDesc(SACT_RMCOL, IC_RMCOL, rmColListener));
         }
     };
     private final Map<String, JButton> mButtons = new HashMap<String, JButton>();
@@ -202,10 +218,13 @@ public class AppView extends JFrame implements Observer{
         addToolbarBtn(toolbar, SACT_SQLQUERY);
         toolbar.addSeparator();
         addToolbarBtn(toolbar, SACT_WRITE);
-        addToolbarBtn(toolbar, SACT_KEYEDIT);
         addToolbarBtn(toolbar, SACT_RMROW);
         addToolbarBtn(toolbar, SACT_ADDROW);
         addToolbarBtn(toolbar, SACT_SETNULL);
+        toolbar.addSeparator();
+        addToolbarBtn(toolbar, SACT_KEYEDIT);
+        addToolbarBtn(toolbar, SACT_RMCOL);
+        addToolbarBtn(toolbar, SACT_ADDCOL);
         toolbar.addSeparator();
         addToolbarBtn(toolbar, SACT_EXIT);
         add(toolbar, BorderLayout.NORTH);

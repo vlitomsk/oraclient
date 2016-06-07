@@ -101,7 +101,7 @@ public class ActiveTableModel extends Observable {
     public void setActiveQueried(String sqlQuery) throws SQLException {
         if (connection == null)
             throw new SQLException("You need to connect!");
-
+        //System.out.println("Query: " + sqlQuery);
         boolean hasRs = connection.sqlQuery(sqlQuery);
         pkeys.clear();
         fkeys.clear();

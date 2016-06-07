@@ -63,4 +63,9 @@ public class ActiveTableCtl {
         model.setActiveQueried("alter table " + model.getActiveTblName() + " drop constraint " + constName);
         model.refresh();
     }
+
+    public void alterTable(String alterspec) throws  SQLException{
+        model.setActiveQueried("alter table " + model.getActiveTblName() + " " + alterspec);
+        model.refresh();
+    }
 }

@@ -10,18 +10,30 @@ public class JLabEdit extends JPanel {
     public JLabEdit(String lbl) {
         super();
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-        init(lbl, "");
+        init(lbl, "", 20);
+    }
+    public JLabEdit(String lbl, int cols) {
+        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+        init(lbl, "", cols);
     }
 
     public JLabEdit(String lbl, String defaultValue) {
         super();
-        init(lbl, defaultValue);
+        init(lbl, defaultValue, 20);
     }
 
-    private void init(String lbl, String defaultValue) {
-        add(new JLabel(lbl));
+    private JLabel lab ;
+    private void init(String lbl, String defaultValue, int cols) {
+        add(this.lab = new JLabel(lbl));
         add(fld = new JTextField(defaultValue));
-        fld.setColumns(20);
+        fld.setColumns(cols);
+    }
+
+    @Override
+    public void setEnabled(boolean enabled) {
+        super.setEnabled(enabled);
+        fld.setEnabled(enabled);
+        lab.setEnabled(enabled);
     }
 
     public String getText() {
