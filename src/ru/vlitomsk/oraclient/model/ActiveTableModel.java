@@ -56,6 +56,8 @@ public class ActiveTableModel extends Observable {
         if (connection == null)
             return;
         activeTblName = tblName;
+        if (lastRs != null)
+            lastRs.close();
         lastRs = connection.sqlQuery("SELECT " + tblName + ".* FROM " + tblName);
         resetSet();
         setChanged();
@@ -65,6 +67,8 @@ public class ActiveTableModel extends Observable {
     public void setActiveQueried(String sqlQuery) throws SQLException {
         if (connection == null)
             throw new SQLException("You need to connect!");
+        if (lastRs != null)
+            lastRs.close();
         lastRs = connection.sqlQuery(sqlQuery);
         resetSet();
         setChanged();
@@ -111,11 +115,11 @@ public class ActiveTableModel extends Observable {
         int idx = 0;
         int rmidx = 0;
         boolean insertmode = idx == selectCount;
-        while ((lastRs.next()) || (insertmode && idx < rowChanges.size())) {
-            if (idx == selectCount) {
-                lastRs.moveToInsertRow();
-                insertmode = true;
-            }
+        if (idx == selectCount) {
+            lastRs.moveToInsertRow();
+            insertmode = true;
+        }
+        while ((!insertmode && lastRs.next()) || (insertmode && idx < rowChanges.size())) {
             if (rmidx < rmIdxArr.length && idx == rmIdxArr[rmidx]) {
                 ++rmidx;
                 if (!insertmode)
@@ -132,6 +136,10 @@ public class ActiveTableModel extends Observable {
                 }
             }
             ++idx;
+            if (idx == selectCount) {
+                lastRs.moveToInsertRow();
+                insertmode = true;
+            }
         }
 
         refresh();
