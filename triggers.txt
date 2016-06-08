@@ -1,0 +1,111 @@
+CREATE OR REPLACE TRIGGER task1_trigger
+BEFORE INSERT ON timetable
+FOR EACH ROW
+DECLARE 
+  train_m_num number;
+  selst marshrut%rowtype;
+  tselst tmarshrut%rowtype;
+BEGIN
+DBMS_OUTPUT.enable;
+SELECT m_num INTO train_m_num FROM trains
+    WHERE trains.num=:new.t_num AND ROWNUM=1;
+SELECT * INTO selst FROM marshrut 
+    WHERE marshrut.station_id=:new.station_id AND marshrut.m_num=train_m_num;
+IF (SQL%NOTFOUND) THEN
+   raise_application_error(-666,'ne sootvetstvuet');
+END IF;
+SELECT * INTO tselst FROM tmarshrut
+    WHERE tmarshrut.station_id=:new.station_id AND tmarshrut.m_num=train_m_num;
+IF (SQL%NOTFOUND) THEN
+   raise_application_error(-666, 'ne sootvetstvuet');
+END IF;
+COMMIT;
+END;
+/
+
+
+
+
+
+
+CREATE OR REPLACE TRIGGER task2_trigger
+BEFORE INSERT ON marshrut
+FOR EACH ROW
+DECLARE
+  maxv1 number;
+  maxv2 number;
+BEGIN
+IF (:new.m_num IS NULL) THEN
+ BEGIN
+  SELECT MAX(m_num) INTO maxv1 FROM marshrut;
+  IF (SQL%NOTFOUND) THEN
+    maxv1 := 0;
+  END IF;
+  SELECT MAX(m_num) INTO maxv2 FROM tmarshrut;
+  IF (SQL%NOTFOUND) THEN
+    maxv2 := 0;
+  END IF;
+  :new.m_num := GREATEST(maxv1, maxv2);
+ END; 
+END IF;
+COMMIT;
+END;
+/
+
+
+
+
+
+CREATE TABLE trains_audit (
+  num NUMBER,
+  category VARCHAR(255),
+  quantity NUMBER,
+  station_id NUMBER,
+  m_num NUMBER,
+  tickets_sold NUMBER
+);
+/
+
+alter table trains_audit
+add constraint fk_traud_stid
+foreign key (station_id)
+references stations(id_s);
+/
+
+
+
+
+
+
+
+CREATE OR REPLACE TRIGGER task3_trigger
+BEFORE DELETE ON trains
+FOR EACH ROW
+DECLARE
+  tksold NUMBER;
+BEGIN
+  SELECT Sum(tickets) INTO tksold FROM timetable HAVING t_num=:old.num;
+  IF (SQL%NOTFOUND) THEN
+    tksold := 0;
+  END IF;
+  IF (tksold > 300) THEN
+   BEGIN
+     INSERT INTO trains_audit 
+     VALUES (
+       :old.num,
+       :old.category,
+       :old.quantity,
+       :old.station_id,
+       :old.m_num,
+       tksold
+     );
+   END;
+  END IF;
+END;
+/
+
+
+
+
+
+
