@@ -1,6 +1,7 @@
 package ru.vlitomsk.oraclient.gui;
 
 import ru.vlitomsk.oraclient.ctl.AppCtl;
+import ru.vlitomsk.oraclient.gui.components.DropTableDialog;
 import ru.vlitomsk.oraclient.gui.components.JAlterDropColumn;
 import ru.vlitomsk.oraclient.gui.components.JAlterFooColumn;
 import ru.vlitomsk.oraclient.model.ActiveTableUpdate;
@@ -31,7 +32,9 @@ public class AppView extends JFrame implements Observer{
             SACT_KEYEDIT = "Edit keys",
             SACT_ADDCOL = "Add column",
             SACT_RMCOL = "Remove column",
-            SACT_MODCOL = "Modify column";
+            SACT_MODCOL = "Modify column",
+            SACT_CREATETABLE = "Create table",
+            SACT_DROPTABLE = "Drop table";
 
     private static final String
         IC_EXIT = "exit.png",
@@ -46,7 +49,9 @@ public class AppView extends JFrame implements Observer{
         IC_KEYEDIT = "keyedit.png",
         IC_ADDCOL = "addcol.png",
         IC_RMCOL = "rmcol.png",
-        IC_MODCOL = "modcol.png";
+        IC_MODCOL = "modcol.png",
+        IC_CREATETABLE = "createtable.png",
+        IC_DROPTABLE = "droptable.png";
 
     private static final String
             MENU_CONN = "Connection",
@@ -145,6 +150,20 @@ public class AppView extends JFrame implements Observer{
         }
     };
 
+    private ActionListener createTableListener = (e) -> {
+        CreateTableDialog dlg = new CreateTableDialog(AppView.this);
+        if (dlg.isOkay()) {
+            tcatch(()->controller.getActiveTableCtl().setActiveQueried(dlg.toString()));
+        }
+    };
+
+    private ActionListener dropTableListener = (e) -> {
+        DropTableDialog dlg = new DropTableDialog(AppView.this);
+        if (dlg.isOkay()) {
+            tcatch(()->controller.getActiveTableCtl().setActiveQueried(dlg.toString()));
+        }
+    };
+
     private final Map<String, ItemDesc> mItems = new HashMap<String,ItemDesc>() {
         {
             put(SACT_EXIT, new ItemDesc(SACT_EXIT, IC_EXIT, killListener));
@@ -160,6 +179,8 @@ public class AppView extends JFrame implements Observer{
             put(SACT_ADDCOL, new ItemDesc(SACT_ADDCOL, IC_ADDCOL, addColListener));
             put(SACT_RMCOL, new ItemDesc(SACT_RMCOL, IC_RMCOL, rmColListener));
             put(SACT_MODCOL, new ItemDesc(SACT_MODCOL, IC_MODCOL, modColListener));
+            put(SACT_CREATETABLE, new ItemDesc(SACT_CREATETABLE, IC_CREATETABLE, createTableListener));
+            put(SACT_DROPTABLE, new ItemDesc(SACT_DROPTABLE, IC_DROPTABLE, dropTableListener));
         }
     };
     private final Map<String, JButton> mButtons = new HashMap<String, JButton>();
@@ -238,6 +259,9 @@ public class AppView extends JFrame implements Observer{
         addToolbarBtn(toolbar, SACT_RMCOL);
         addToolbarBtn(toolbar, SACT_ADDCOL);
         addToolbarBtn(toolbar, SACT_MODCOL);
+        toolbar.addSeparator();
+        addToolbarBtn(toolbar, SACT_CREATETABLE);
+        addToolbarBtn(toolbar, SACT_DROPTABLE);
         toolbar.addSeparator();
         addToolbarBtn(toolbar, SACT_EXIT);
         add(toolbar, BorderLayout.NORTH);
